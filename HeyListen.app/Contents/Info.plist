@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>HeyListen</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.user.heylisten</string>
+	<key>CFBundleName</key>
+	<string>Hey Listen!</string>
+	<key>CFBundleDisplayName</key>
+	<string>Hey Listen!</string>
+	<key>CFBundleVersion</key>
+	<string>1.0.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>LSUIElement</key>
+	<true/>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.15</string>
+	
+	<!-- Permission Descriptions for Distribution -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Hey Listen! needs microphone access to record your voice when you hold the function key. Your audio is only processed when you actively trigger recording.</string>
+	
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Hey Listen! uses speech recognition to convert your recorded voice to text. This enables the core functionality of voice-to-text transcription.</string>
+	
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Hey Listen! needs accessibility access to automatically type the transcribed text where your cursor is located. This allows seamless text injection into any application.</string>
+	
+	<!-- Required for proper GUI application behavior -->
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+</dict>
+</plist>
