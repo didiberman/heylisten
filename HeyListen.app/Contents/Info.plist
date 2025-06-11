@@ -5,11 +5,11 @@
 	<key>CFBundleExecutable</key>
 	<string>HeyListen</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.user.heylisten</string>
+	<string>com.user.heylisten.final</string>
 	<key>CFBundleName</key>
-	<string>Hey Listen!</string>
+	<string>Hey Listen Final</string>
 	<key>CFBundleDisplayName</key>
-	<string>Hey Listen!</string>
+	<string>Hey Listen Final</string>
 	<key>CFBundleVersion</key>
 	<string>1.0.0</string>
 	<key>CFBundleShortVersionString</key>

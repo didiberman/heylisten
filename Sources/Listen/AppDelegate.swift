@@ -6,7 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var audioRecorder: AudioRecorder?
     var speechRecognizer: AzureSpeechRecognizer?
     var textInjector: TextInjector?
-    var listeningIndicator: ListeningIndicator?
+    // var soundWaveIndicator: SoundWaveIndicator? // Disabled to prevent crashes
     var settingsWindow: SettingsWindow?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -26,8 +26,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
         
-        // Check if we need to show settings on first launch
-        checkInitialSetup()
+        // Listen for setup completion
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(setupCompleted),
+            name: .setupComplete,
+            object: nil
+        )
+        
+        // Check if we need to show setup on first launch
+        checkAndShowSetup()
         
         // Set up key monitoring with saved preference
         configureTargetKey()
@@ -88,6 +96,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Hey, Listen! - Voice to Text", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         
+        let setupItem = NSMenuItem(title: "Setup API Key...", action: #selector(openSetup), keyEquivalent: "s")
+        setupItem.target = self
+        menu.addItem(setupItem)
+        
         let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
@@ -96,19 +108,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         logItem.target = self
         menu.addItem(logItem)
         
+        let statusItem = NSMenuItem(title: "Speech Provider Status", action: #selector(showSpeechStatus), keyEquivalent: "")
+        statusItem.target = self
+        menu.addItem(statusItem)
+        
         menu.addItem(NSMenuItem.separator())
         
         let quitItem = NSMenuItem(title: "Quit Hey, Listen!", action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
         
-        statusItem?.menu = menu
+        self.statusItem?.menu = menu
     }
     
     private func setupComponents() {
         audioRecorder = AudioRecorder()
         textInjector = TextInjector()
-        listeningIndicator = ListeningIndicator()
+        // soundWaveIndicator = SoundWaveIndicator() // Disabled to prevent crashes
         
         // Initialize Azure service (loads config automatically)
         _ = AzureService.shared
@@ -163,9 +179,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return (key, region)
     }
     
-    private func checkInitialSetup() {
-        // For now, we'll skip the settings check since we're reading from file
-        print("📋 Using secrets file for configuration")
+    private func checkAndShowSetup() {
+        // Check if setup is needed and show setup window if required
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            SetupWindowManager.shared.showSetupIfNeeded()
+        }
+    }
+    
+    @objc private func setupCompleted() {
+        log("✅ Setup completed - refreshing speech services")
+        // Refresh unified speech service with new configuration
+        UnifiedSpeechService.shared.refreshAzureConfig()
     }
     
     @objc private func azureConfigChanged() {
@@ -177,6 +201,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         speechRecognizer = AzureSpeechRecognizer(subscriptionKey: azureKey, region: region)
         print("✅ Speech recognizer updated with new configuration")
+    }
+    
+    @objc private func openSetup() {
+        log("🔧 Opening setup window...")
+        SetupWindowManager.shared.showSetupWindow()
     }
     
     @objc private func openSettings() {
@@ -202,6 +231,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.selectFile(logPath, inFileViewerRootedAtPath: "")
     }
     
+    @objc private func showSpeechStatus() {
+        let status = UnifiedSpeechService.shared.getProviderStatus()
+        
+        let alert = NSAlert()
+        alert.messageText = "Speech Recognition Status"
+        alert.informativeText = status
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+    
     @objc private func quitApp() {
         log("🛑 Quitting Hey, Listen! app")
         NSApp.terminate(nil)
@@ -209,15 +248,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func startListening() {
         log("🎤 Starting to listen...")
-        // listeningIndicator?.show()  // Disable indicator to prevent crash
+        // soundWaveIndicator?.show() // Disabled to prevent crashes
         audioRecorder?.startRecording()
     }
     
     private func stopListening() {
         log("🛑 Stopping listening...")
-        
-        // Skip indicator completely to avoid crash
-        // listeningIndicator?.hide()  // This was causing the crash
+        // soundWaveIndicator?.hide() // Disabled to prevent crashes
         
         // Get the recording URL and stop recording
         let recordingURL = audioRecorder?.currentRecordingURL
@@ -227,30 +264,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let audioURL = recordingURL {
             log("📁 Got recording: \(audioURL.path)")
             
-            do {
-                let audioData = try Data(contentsOf: audioURL)
-                log("📖 Read \(audioData.count) bytes")
+            // Use unified speech service (local first, Azure fallback)
+            UnifiedSpeechService.shared.transcribe(audioURL: audioURL) { [weak self] text in
+                log("📝 Speech result: \(text ?? "nil")")
                 
-                // Actually call Azure now that we fixed the crash
-                MinimalAzure.shared.sendAudio(audioData) { [weak self] text in
-                    log("📝 Azure result: \(text ?? "nil")")
-                    
-                    if let text = text, !text.isEmpty {
-                        log("✅ Transcription: '\(text)'")
-                        log("💉 About to inject text...")
-                        self?.textInjector?.insertText(text)
-                        log("💉 Text injection call completed")
-                    } else {
-                        log("❌ No text to inject (empty or nil result)")
-                    }
+                if let text = text, !text.isEmpty {
+                    log("✅ Transcription: '\(text)'")
+                    log("💉 About to inject text...")
+                    self?.textInjector?.insertText(text)
+                    log("💉 Text injection call completed")
+                } else {
+                    log("❌ No text to inject (empty or nil result)")
                 }
-                
-                // Clean up file
-                try FileManager.default.removeItem(at: audioURL)
-                log("🧹 File cleaned up")
-                
-            } catch {
-                log("❌ Failed to process audio: \(error)")
             }
         }
         
@@ -259,7 +284,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func testOnlyIndicatorHide() {
         print("🧪 Testing ONLY indicator hide...")
-        listeningIndicator?.hide()
+        // soundWaveIndicator?.hide() // Disabled to prevent crashes
         print("✅ Indicator hide test completed")
     }
     
