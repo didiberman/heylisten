@@ -1,98 +1,95 @@
-# Hey, Listen! – Voice-to-Text for macOS
+# Listenman
 
-**Hey, Listen!** is a lightweight, privacy-friendly macOS menu bar app that lets you transcribe your voice into text anywhere on your Mac. Hold a configurable key, speak, and release—the text appears instantly in your active application.
+**Listenman** is a lightweight macOS menu bar app that transcribes your voice into text and injects it into any application. It supports both local (on-device) and Azure cloud speech recognition, making it fast, private, and reliable.
 
 ## Features
 
-- **Push-to-Talk Transcription:** Hold a key (e.g., Fn, Ctrl, Cmd, etc.), speak, and release to transcribe.
-- **Menu Bar Integration:** Runs quietly in your menu bar, always ready.
-- **Configurable Trigger Key:** Choose your preferred key for recording.
-- **Azure Speech-to-Text:** Uses Microsoft Azure for accurate, fast transcription.
-- **Automatic Text Injection:** Inserts transcribed text directly into the active app, or copies to clipboard if permissions are missing.
-- **Visual Listening Indicator:** Animated overlay shows when the app is listening.
-- **Privacy-First:** No data is stored or sent anywhere except to Azure for transcription.
+- 🎙️ **Menu Bar App**: Runs quietly in your menu bar, always ready to transcribe.
+- 🗣️ **Voice-to-Text**: Hold a configurable key, speak, and have your words typed into any app.
+- 🔒 **Privacy First**: Uses on-device speech recognition when available; falls back to Azure only if needed.
+- ☁️ **Azure Integration**: Supports Microsoft Azure Speech-to-Text for high-accuracy transcription.
+- ⚡ **Quick Setup**: Easy configuration for API keys and preferences.
+- 🛠️ **Customizable**: Choose your activation key and tweak settings to fit your workflow.
+- 📝 **Logging**: Built-in logging for troubleshooting and transparency.
 
 ## Screenshots
 
-*(Add screenshots of the welcome screen, menu bar icon, and listening indicator here)*
+<!-- Add screenshots here if available -->
+![Menu Bar Screenshot](screenshot-menubar.png)
+![Setup Window Screenshot](screenshot-setup.png)
 
-## Getting Started
+## Installation
 
 ### Prerequisites
 
-- macOS 13.0 (Ventura) or later
-- Xcode 15+ (for building from source)
-- An [Azure Speech Service](https://portal.azure.com) subscription key (free tier available)
+- macOS 12.0 or later
+- Xcode 14+ (for building from source)
+- An Azure Speech API key (for cloud transcription)
 
-### Installation
+### Download
 
-1. **Clone the repository:**
+- [Releases](https://github.com/yourusername/listenman/releases) (coming soon)
+
+### Build from Source
+
+1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/listen.git
-   cd listen
+   git clone https://github.com/yourusername/listenman.git
+   cd listenman/Sources
    ```
-
-2. **Configure Azure Speech Service:**
-   - Go to the [Azure Portal](https://portal.azure.com) and create a Speech Service resource.
-   - Copy your subscription key and region.
-   - Open `Sources/Listen/AppDelegate.swift` and replace the placeholder in:
-     ```swift
-     let azureKey = "YOUR_AZURE_SUBSCRIPTION_KEY"
-     speechRecognizer = AzureSpeechRecognizer(subscriptionKey: azureKey, region: "YOUR_REGION")
-     ```
-   - (See `azure_config.txt` for more details.)
-
-3. **Build and run:**
-   - Open the project in Xcode and run, or use SwiftPM:
-     ```sh
-     swift build
-     swift run Listen
-     ```
-
-### Permissions
-
-On first launch, the app will request:
-- **Microphone access** (to record audio)
-- **Speech recognition access** (to transcribe)
-- **Accessibility access** (to inject text and monitor key presses)
-
-Grant these in **System Settings > Privacy & Security**.
+2. Open `Listen.xcodeproj` in Xcode.
+3. Build and run the app.
 
 ## Usage
 
-1. Launch the app. The welcome screen will guide you to select your preferred trigger key.
-2. After setup, the app runs in your menu bar (microphone icon).
-3. **To transcribe:**  
-   - Hold your chosen key (e.g., Fn), speak, and release.
-   - The transcribed text will appear in your active app, or be copied to your clipboard if accessibility permissions are missing.
-
-## How It Works
-
-- **Global Key Monitoring:** Listens for your chosen key using macOS accessibility APIs.
-- **Audio Recording:** Records your voice in WAV format (16kHz, mono) for Azure compatibility.
-- **Speech Recognition:** Uploads the audio to Azure's Speech-to-Text API and receives the transcription.
-- **Text Injection:** Pastes the result into the current app using simulated Cmd+V, or copies to clipboard as fallback.
-- **Visual Feedback:** Shows an animated "Listening..." indicator while recording.
-
-## Project Structure
-
-```
-Sources/Listen/
-├── AppDelegate.swift         # App lifecycle, menu bar, main logic
-├── ListenApp.swift           # SwiftUI entry point, onboarding
-├── WelcomeView.swift         # Onboarding UI and key selection
-├── GlobalKeyMonitor.swift    # Monitors global key events
-├── AudioRecorder.swift       # Handles audio recording
-├── SpeechRecognizer.swift    # Azure Speech-to-Text integration
-├── TextInjector.swift        # Injects text into active app
-├── ListeningIndicator.swift  # Visual listening overlay
-├── PermissionManager.swift   # Handles permissions
-```
+1. Launch Listenman. A microphone icon 🎙️ will appear in your menu bar.
+2. Open the setup window from the menu to enter your Azure API key (optional, for cloud transcription).
+3. Select your preferred activation key in settings.
+4. Hold the activation key, speak, and release to transcribe. The text will be injected into your current app.
 
 ## Configuration
 
-See [`azure_config.txt`](azure_config.txt) for step-by-step Azure setup instructions.
+- **API Key**: Enter your Azure Speech API key in the setup window or place it in a `secrets.txt` file in your home directory.
+- **Region**: Set your Azure region in the setup window or as the second line in `secrets.txt`.
+- **Activation Key**: Choose which key triggers voice recording in the settings.
+
+### `secrets.txt` Format
+
+```
+YOUR_AZURE_API_KEY
+YOUR_AZURE_REGION   # e.g., germanywestcentral
+```
+
+## Architecture
+
+- **SwiftUI** for UI components and menu bar integration.
+- **Cocoa** for macOS-specific features.
+- **LocalSpeechRecognizer** for on-device transcription.
+- **AzureSpeechRecognizer** and **AzureService** for cloud transcription.
+- **TextInjector** for injecting transcribed text into any app.
+- **Logger** for logging and troubleshooting.
+
+## Security & Privacy
+
+- Local transcription is used by default when available.
+- Azure transcription only sends audio to Microsoft if local recognition fails or is unavailable.
+- No audio or transcription data is stored or sent to third parties except Azure (if enabled).
+
+## Troubleshooting
+
+- Check the log file from the menu for detailed error messages.
+- Ensure microphone permissions are granted.
+- For Azure, verify your API key and region.
+
+## Contributing
+
+Contributions are welcome! Please open issues or pull requests for bug fixes, features, or documentation improvements.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details. 
+[MIT License](LICENSE)
+
+## Credits
+
+- Built with [Swift](https://swift.org/) and [SwiftUI](https://developer.apple.com/xcode/swiftui/).
+- Azure Speech-to-Text by [Microsoft](https://azure.microsoft.com/en-us/services/cognitive-services/speech-to-text/). 
