@@ -1,6 +1,6 @@
-# Listenman
+# HeyLISTEN
 
-**Listenman** is a lightweight macOS menu bar app that transcribes your voice into text and injects it into any application. It supports both local (on-device) and Azure cloud speech recognition, making it fast, private, and reliable.
+**HeyListen** is a lightweight macOS menu bar app that transcribes your voice into text and injects it into any application. It supports both local (on-device) and Azure cloud speech recognition, making it fast, private, and reliable.
 
 ## Features
 
